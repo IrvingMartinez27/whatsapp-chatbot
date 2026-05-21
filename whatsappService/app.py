@@ -76,7 +76,6 @@ def RecibirMensaje():
         print("Ocurrió un error al procesar el mensaje:", str(e))
         return "EVENT_RECEIVED"
 
-
-    if __name__ == "__main__":
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8502))
     app.run(host="0.0.0.0", port=port, debug=True)
