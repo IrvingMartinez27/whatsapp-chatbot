@@ -1,0 +1,79 @@
+from flask import Flask, request
+import requests
+import json
+
+app = Flask(__name__)
+
+@app.route("/saludar", methods=["GET"])
+def saludar():
+    return "Servidor funcionando Hi"
+
+@app.route("/whatsapp", methods=["GET"])
+def VerifyToken():
+    try:
+        access_token = "asdasd"
+        token = request.args.get("hub.verify_token")
+        challenge = request.args.get("hub.challenge")
+        if token == access_token:
+            return challenge
+        else:
+            return "error", 400
+    except:
+        return "error", 400
+
+def whatsappService(body):
+    try:
+        token = "EAAMtlIjZBjLwBRjYjZAQV10DxTxewwahI3G2xZAvBc3EYehwklGzZC3bDcCZBMoVKBOph8O12M778IJw3nfBXevZChi9zH1UI5oFSkMq8plSUbrKhTZBx4fV8rRIbKZBHwuT3SdGdt5g6vWOeNOyJoVPODssB03NvQC0IMAgOglIom7hLa3qw9WdKsc3H4ArpEt5yQZDZD"
+        api_url = "https://graph.facebook.com/v22.0/1098506706683416/messages"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}"
+        }
+        response = requests.post(api_url, data=json.dumps(body), headers=headers)
+        if response.status_code == 200:
+            print("Mensaje enviado correctamente")
+            return True
+        else:
+            print("Error al enviar el mensaje:", response.text)
+            return False
+    except Exception as e:
+        print("Ocurrió un error con la API:", str(e))
+        return False
+
+def enviarmensaje(text, numero):
+    body = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": numero,
+        "type": "text",
+        "text": {
+            "body": "Esta es la respuesta a la pregunta: " + text
+        }
+    }
+    return body
+
+@app.route("/whatsapp", methods=["POST"])
+def RecibirMensaje():
+    try:
+        body = request.get_json()
+        entry = body["entry"][0]
+        changes = entry["changes"][0]
+        value = changes["value"]
+        messages = value["messages"][0]
+        text = messages["text"]
+        question_user = text["body"]
+        number = messages["from"]
+        print("Mensaje recibido de:", question_user)
+        body_answer = enviarmensaje(question_user, number)
+        send_message = whatsappService(body_answer)
+        if send_message:
+            print("Mensaje enviado correctamente")
+        else:
+            print("Error al enviar el mensaje")
+        return "EVENT_RECEIVED"
+    except Exception as e:
+        print("Ocurrió un error al procesar el mensaje:", str(e))
+        return "EVENT_RECEIVED"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8502, debug=True)
