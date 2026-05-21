@@ -65,6 +65,7 @@ def RecibirMensaje():
         question_user = text["body"]
         number = messages["from"]
         print("Mensaje recibido de:", question_user)
+        print("Número destinatario:", number)
         body_answer = enviarmensaje(question_user, number)
         send_message = whatsappService(body_answer)
         if send_message:
@@ -75,7 +76,6 @@ def RecibirMensaje():
     except Exception as e:
         print("Ocurrió un error al procesar el mensaje:", str(e))
         return "EVENT_RECEIVED"
-    print("Número destinatario:", number)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8502))
